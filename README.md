@@ -1,0 +1,2 @@
+# smpforum
+A simple forum
