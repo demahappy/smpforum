@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple Forum</title>
+    <style>
+        .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+        .post { border: 1px solid #ddd; padding: 15px; margin: 10px 0; }
+        .author { color: #666; font-weight: bold; }
+        .timestamp { color: #999; font-size: 0.9em; }
+        input, textarea { width: 100%; margin: 5px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Simple Forum</h1>
+        
+        <div id="postForm">
+            <input type="text" id="username" placeholder="Your name">
+            <textarea id="content" placeholder="Your message (max 500 chars)"></textarea>
+            <button onclick="createPost()">Post Message</button>
+        </div>
+
+        <div id="posts"></div>
+    </div>
+
+    <script>
+        function loadPosts() {
+            fetch('/api/posts')
+                .then(r => r.json())
+                .then(posts => {
+                    const container = document.getElementById('posts');
+                    container.innerHTML = posts.posts.map(post => `
+                        <div class="post">
+                            <div class="author">${post.author}</div>
+                            <div class="timestamp">${post.timestamp}</div>
+                            <p>${post.content}</p>
+                            <button onclick="deletePost(${post.id})">Delete</button>
+                        </div>
+                    `).join('');
+                });
+        }
+
+        function createPost() {
+            const data = {
+                username: document.getElementById('username').value.trim(),
+                content: document.getElementById('content').value.trim()
+            };
+            
+            if (!data.username || !data.content) {
+                alert('Please fill all fields');
+                return;
+            }
+
+            fetch('/api/posts', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            }).then(() => {
+                document.getElementById('content').value = '';
+                loadPosts();
+            });
+        }
+
+        function deletePost(postId) {
+            if (confirm('Delete this post?')) {
+                fetch(`/api/posts/${postId}`, { method: 'DELETE' })
+                    .then(() => loadPosts());
+            }
+        }
+
+        setInterval(loadPosts, 3000);
+        loadPosts();
+    </script>
+</body>
+</html>
